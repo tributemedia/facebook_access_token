@@ -1,0 +1,6 @@
+name = Facebook Access Token
+description = Keep your facebook access token current
+core = 7.x
+version = 1.0
+package = Facebook Access Tokens
+

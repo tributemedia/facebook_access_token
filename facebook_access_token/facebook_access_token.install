@@ -1,0 +1,65 @@
+<?php
+
+function facebook_access_token_schema() {
+    $schema['facebook_access_tokens'] = array (
+        'description' => 'Store Faebook Access Token Data',
+        'fields' => array(
+            'appID' => array(
+                'description' => 'Your Facebook APP ID',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => 'YOUR FACEBOOK APP ID',
+            ),
+            'appSecret' => array(
+                'description' => 'Your Facebook APP SECRET KEY',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => 'YOUR FACEBOOK APP SECRET KEY',
+            ),
+            'profileID' => array(
+                'description' => 'Your Facebook PROFILE PAGE ID',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => 'YOUR FACEBOOK PROFILE PAGE ID',
+            ),
+            'nodeID' => array(
+                'description' => 'Node of Feed',
+                'type' => 'varchar',
+                'length' => 255,
+                'not null' => TRUE,
+                'default' => 'YOUR FACEBOOK FEED NODE ID',
+            ),
+        ),
+    );
+    return $schema;
+}
+function facebook_access_token_install() {
+    drupal_install_schema('facebook_access_tokens');
+    
+    $query = db_insert('facebook_access_tokens')
+        ->fields(array(
+            'appID' => 'YOUR FACEBOOK APP ID',
+            'appSecret' => 'YOUR FACEBOOK APP SECRET KEY',
+            'profileID' => 'YOUR FACEBOOK PROFILE PAGE ID',
+            'nodeID' => '1',
+        ))->execute();
+    
+    $query = db_update('system')
+        ->fields(array(
+            'weight' => '5',
+        ))->condition('name', 'feeds')->execute();
+        
+    $query = db_update('system')
+        ->fields(array(
+            'weight' => '5',
+        ))->condition('name', 'feeds_import')->execute();
+}
+
+function facebook_access_token_uninstall() {
+    drupal_uninstall_schema('facebook_access_tokens');
+}
+
+?>

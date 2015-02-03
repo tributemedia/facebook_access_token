@@ -1,0 +1,109 @@
+<?php
+
+
+function facebook_access_token_menu() {
+  
+    $items['admin/config/system/facebook_access_token'] = array(
+        'title' => 'Facebook Access Token Settings',
+        'description' => 'Please fill out the required fields.',
+        'page callback' => 'drupal_get_form',
+        'page arguments' => array('facebook_access_token_form'),
+        'access arguments' => array('access content'),
+        'type' => MENU_NORMAL_ITEM,
+    );
+
+    return $items;
+}
+
+function facebook_access_token_form($form, &$form_state) {
+  
+  $query = db_query('SELECT * from facebook_access_tokens')->fetchAll();
+  
+  foreach($query as $items) {
+    $appID = $items->appID;
+    $appSecret = $items->appSecret;
+    $profileID = $items->profileID;
+    $nodeID = $items->nodeID;
+  }
+  $form['app_text'] = array(
+    '#markup' => '<div class="facebook_access_markup_container">If you need help locating your facebook profile ID <a href="http://findmyfacebookid.com/" target="_blank">CLICK HERE</a> for a tool to help.',
+    
+  );
+  $form['app_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Enter your Facebook APP ID.'),
+    '#default_value' => $appID,
+  );
+  $form['app_secret'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Enter your Facebook APP SECRET KEY.'),
+    '#default_value' => $appSecret,
+  );
+  $form['profile_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Enter your Facebook PROFILE ID.'),
+    '#default_value' => $profileID,
+  );
+  $form['node_id'] = array(
+    '#type' => 'textfield',
+    '#title' => t('Enter the NODE ID of your facebook Feed.'),
+    '#default_value' => $nodeID,
+  );
+  $form['submit'] = array(
+    '#type' => 'submit',
+    '#value' => 'Save Values',
+  );
+  return $form;
+}
+function facebook_access_token_form_submit($form, &$form_state ) {
+
+  $appID = $form_state['values']['app_id'];
+  $appSecret = $form_state['values']['app_secret'];
+  $profileID = $form_state['values']['profile_id'];
+  $nodeID = $form_state['values']['node_id'];
+  
+  $query = db_update('facebook_access_tokens')
+    ->fields(array(
+      'appID' => $appID,
+      'appSecret' => $appSecret,
+      'profileID' => $profileID,
+      'nodeID' => $nodeID,
+    ))->execute();
+}
+
+function fetchUrl($url){
+ $ch = curl_init();
+ curl_setopt($ch, CURLOPT_URL, $url);
+ curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+ curl_setopt($ch, CURLOPT_TIMEOUT, 20);
+
+ $feedData = curl_exec($ch);
+ curl_close($ch);
+
+ return $feedData;
+
+}
+
+function facebook_access_token_cron() {
+  
+  $query = db_query('SELECT * from facebook_access_tokens')->fetchAll();
+  
+  foreach($query as $items) {
+    $appID = $items->appID;
+    $appSecret = $items->appSecret;
+    $profileID = $items->profileID;
+    $nodeID = $items->nodeID;
+  }
+
+$authToken = fetchUrl("https://graph.facebook.com/oauth/access_token?grant_type=client_credentials&client_id={$appID}&client_secret={$appSecret}");
+
+$theurl = "https://graph.facebook.com/v2.2/{$profileID}/feed?{$authToken}";
+
+$feeds_source = feeds_source('facebook_feed_importer', $nodeID);
+$feeds_config['source'] = $theurl;
+$feeds_source->setConfigFor($feeds_source->importer->fetcher, $feeds_config);
+$feeds_source->save();
+$feeds_source->startImport();
+}
+
+?>
