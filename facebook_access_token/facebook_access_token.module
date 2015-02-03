@@ -1,6 +1,5 @@
 <?php
 
-
 function facebook_access_token_menu() {
   
     $items['admin/config/system/facebook_access_token'] = array(
